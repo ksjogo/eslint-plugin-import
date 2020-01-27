@@ -305,8 +305,12 @@ function mutateRanksToAlphabetize(imported, alphabetizeOptions) {
 
 function computePathRank(ranks, pathGroups, path, maxPosition) {
   for (let i = 0, l = pathGroups.length; i < l; i++) {
-    const { pattern, patternOptions, group, position = 1 } = pathGroups[i]
-    if (minimatch(path, pattern, patternOptions || { nocomment: true })) {
+    const { pattern, patternOptions, group, regex, position = 1 } = pathGroups[i]
+    if (regex) {
+      if (path.match(new RegExp(regex))) {
+        return ranks[group] + (position / maxPosition)
+        }
+      } else if (minimatch(path, pattern, patternOptions || { nocomment: true })) {
       return ranks[group] + (position / maxPosition)
     }
   }
@@ -531,7 +535,18 @@ module.exports = {
                   enum: ['after', 'before'],
                 },
               },
-              required: ['pattern', 'group'],
+              oneOf: [
+                {
+                  'required': [
+                    'pattern', 'group',
+                  ],
+                },
+                {
+                  'required': [
+                    'regex', 'group',
+                  ],
+                },
+              ],
             },
           },
           'newlines-between': {
